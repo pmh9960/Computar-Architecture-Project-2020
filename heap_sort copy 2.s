@@ -64,41 +64,65 @@ loop:
 
     jal heapify
 
+#########################################
+# print
+# $t0 : temporary pointer
+move $t0, $s0
+li $v0, 4
+la $a0, output
+syscall
+loop_print: 
+    bge $t0, $s3, exit_loop_print
+    li $v0, 1
+    lw $a0, ($t0)
+    syscall
+    li $v0, 4
+    la $a0, space
+    syscall
+    addi $t0, $t0, 4
+    j loop_print
 
-    print:
-        # print
-        li $v0, 4
-        la $a0, output
-        syscall
-        # $t5 : pointer (it is only used in print loop)
-        # $t6, $t7 : swap temp
-        move $t5, $s3
-        loop_print: 
-            bge  $t5, $s0, exit_loop_print
-            addi $t5, $t5, -4
+exit_loop_print:
+    li $v0, 4
+    la $a0, enter
+    syscall
+#########################################
 
-            li  $v0, 1
-            lw  $a0, ($s0)
-            syscall
-            li  $v0, 4
-            la  $a0, space
-            syscall
 
-            # put the last node in front
-            # but it is actually swap
-            lw  $t6, ($s0)
-            lw  $t7, ($t5)
-            sw  $t7, ($s0)
-            sw  $t6, ($t5)
+    # print:
+    #     # print
+    #     li $v0, 4
+    #     la $a0, output
+    #     syscall
+    #     # $t5 : pointer (it is only used in print loop)
+    #     # $t6, $t7 : swap temp
+    #     move $t5, $s3
+    #     loop_print: 
+    #         bge  $t5, $s0, exit_loop_print
+    #         addi $t5, $t5, -4
 
-            # heapify (head to tail)
+    #         li  $v0, 1
+    #         lw  $a0, ($s0)
+    #         syscall
+    #         li  $v0, 4
+    #         la  $a0, space
+    #         syscall
 
-            j loop_print
-        exit_loop_print:
+    #         # put the last node in front
+    #         # but it is actually swap
+    #         lw  $t6, ($s0)
+    #         lw  $t7, ($t5)
+    #         sw  $t7, ($s0)
+    #         sw  $t6, ($t5)
 
-        li $v0, 4
-        la $a0, enter
-        syscall
+    #         # heapify (head to tail)
+
+    #         j loop_print
+    #     exit_loop_print:
+
+    #     li $v0, 4
+    #     la $a0, enter
+    #     syscall
 
     j loop
 
