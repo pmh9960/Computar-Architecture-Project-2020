@@ -80,9 +80,9 @@ heapify:
     div $t0, $t0, 2
     addi $t0, $t0, -1
     j exit_odd_even
-odd:
-    div $t0, $t0, 2
-exit_odd_even:
+    odd:
+        div $t0, $t0, 2
+    exit_odd_even:
 
     move $t1, $t0
     mul $t2, $t0, 2
@@ -102,55 +102,67 @@ exit_odd_even:
     lw  $t6, 0($t6)
     ble $t6, $t5, L1 # unsorted[largest] >= unsorted[left_index]
     move $t1, $t2
-L1: 
-    # right
-    bge $t3, $s2, L2
-    # $t5 : arr[right_index]
-    # $t6 : arr[largest]
-    mul $t5, $t3, 4
-    add $t5, $t5, $s0
-    mul $t6, $t1, 4
-    add $t6, $t6, $s0
-    lw  $t5, 0($t5)
-    lw  $t6, 0($t6)
-    ble $t6, $t5, L2 # unsorted[largest] >= unsorted[right_index]
-    move $t1, $t3
-L2:
-    beq $t0, $t1, L3
-    # unsorted[largest], unsorted[index] = unsorted[index], unsorted[largest]
-    # heapify(unsorted, largest, heap_size)
-    mul $t5, $t1, 4
-    add $t5, $t5, $s0
-    mul $t6, $t0, 4
-    add $t6, $t6, $s0
+    L1: 
+        # right
+        bge $t3, $s2, L2
+        # $t5 : arr[right_index]
+        # $t6 : arr[largest]
+        mul $t5, $t3, 4
+        add $t5, $t5, $s0
+        mul $t6, $t1, 4
+        add $t6, $t6, $s0
+        lw  $t5, 0($t5)
+        lw  $t6, 0($t6)
+        ble $t6, $t5, L2 # unsorted[largest] >= unsorted[right_index]
+        move $t1, $t3
+    L2:
+        beq $t0, $t1, L3
+        # unsorted[largest], unsorted[index] = unsorted[index], unsorted[largest]
+        # heapify(unsorted, largest, heap_size)
+        mul $t5, $t1, 4
+        add $t5, $t5, $s0
+        mul $t6, $t0, 4
+        add $t6, $t6, $s0
 
-    lw  $t7, 0($t5)
-    lw  $t8, 0($t6)
-    sw  $t7, 0($t6)
-    sw  $t8, 0($t5)
+        lw  $t7, 0($t5)
+        lw  $t8, 0($t6)
+        sw  $t7, 0($t6)
+        sw  $t8, 0($t5)
 
-    jr, heapify
+        jr, heapify
 
-L3:
-    sw $ra, 0($sp)
-    addi $sp, $sp, 4
+    L3:
+        sw $ra, 0($sp)
+        addi $sp, $sp, 4
+        # finish heapify
 
-    # print
-    # $t0 : temporary pointer
-    move $t0, $s0
-    li $v0, 4
-    la $a0, output
-    syscall
-
+# print
+li $v0, 4
+la $a0, output
+syscall
+# $t5 : pointer (it is only used in print loop)
+# $t6, $t7 : swap temp
+move $t5, $s3
 loop_print: 
-    bge $t0, $s3, exit_loop_print
-    li $v0, 1
-    lw $a0, ($t0)
+    bge  $t5, $s0, exit_loop_print
+    addi $t5, $t5, -4
+
+    li  $v0, 1
+    lw  $a0, ($s0)
     syscall
-    li $v0, 4
-    la $a0, space
+    li  $v0, 4
+    la  $a0, space
     syscall
-    addi $t0, $t0, 4
+
+    # put the last node in front
+    # but it is actually swap
+    lw  $t6, ($s0)
+    lw  $t7, ($t5)
+    sw  $t7, ($s0)
+    sw  $t6, ($t5)
+
+    # heapify (head to tail)
+
     j loop_print
 
 exit_loop_print:
