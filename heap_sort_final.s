@@ -33,11 +33,11 @@ main:
 	syscall
 
     # $s0 = address of heap
-    # $s1 = size of heap
+    # $s1 = MAX size of heap
     la  $s0, heap
     lw  $s1, heapsz
 
-    # $s2 = size of heap
+    # $s2 = size of heap (static)
     # $s3 = store pointer
     addi $s0, $s0, 3
     li  $s2, 0
@@ -59,23 +59,20 @@ loop:
     addi $s2, $s2, 1
     addi $s3, $s3, 4
 
-    # sub $t0, $s2, 1
-    li $t0, 0
-
-    jal heapify
-
-
     print:
         # print
         li $v0, 4
         la $a0, output
         syscall
-        # $t5 : pointer (it is only used in print loop)
+        # $s6 : pointer (it is only used in print loop)
         # $t6, $t7 : swap temp
-        move $t5, $s3
+        move $s6, $s3
+        move $s4, $s2
         loop_print: 
-            bge  $t5, $s0, exit_loop_print
-            addi $t5, $t5, -4
+            jal heap_sort
+
+            ble  $s6, $s0, exit_loop_print
+            addi $s6, $s6, -4
 
             li  $v0, 1
             lw  $a0, ($s0)
@@ -87,11 +84,11 @@ loop:
             # put the last node in front
             # but it is actually swap
             lw  $t6, ($s0)
-            lw  $t7, ($t5)
+            lw  $t7, ($s6)
             sw  $t7, ($s0)
-            sw  $t6, ($t5)
+            sw  $t6, ($s6)
 
-            # heapify (head to tail)
+            addi $s4, $s4, -1
 
             j loop_print
         exit_loop_print:
@@ -127,7 +124,8 @@ heapify:
     # temp : largest, left_index, right_index
     #        $t1,     $t2,        $t3
     # trash value : $t5, $t6, $t7
-    addi $sp, $sp, -4
+    addi $sp, $sp, -8
+    sw $t5, 4($sp)
     sw $ra, 0($sp)
 
     move $t1, $t0
@@ -137,7 +135,7 @@ heapify:
     addi $t3, $t3, 2
 
     # left_index < heap_size
-    bge $t2, $s2, L1
+    bge $t2, $s4, L1
     # $t5 : arr[left_index]
     # $t6 : arr[largest]
     mul $t5, $t2, 4
@@ -150,7 +148,7 @@ heapify:
     move $t1, $t2
     L1: 
         # right
-        bge $t3, $s2, L2
+        bge $t3, $s4, L2
         # $t5 : arr[right_index]
         # $t6 : arr[largest]
         mul $t5, $t3, 4
@@ -181,6 +179,23 @@ heapify:
 
     # finish heapify
     end_heapify:
+    lw $ra, 0($sp)
+    lw $t5, 4($sp)
+    addi $sp, $sp, 8
+    jr $ra
+
+heap_sort:
+    addi $sp, $sp, -4
+    sw $ra, 0($sp)
+    # $s5 : sort loop index (n/2 to 0)
+    div $s5, $s4, 2
+sort_loop:
+    blt $s5, 0, exit_sort_loop
+    move $t0, $s5
+    jal heapify
+    addi $s5, $s5, -1
+    j sort_loop
+exit_sort_loop:
     lw $ra, 0($sp)
     addi $sp, $sp, 4
     jr $ra
