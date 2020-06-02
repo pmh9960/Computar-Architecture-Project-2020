@@ -14,7 +14,9 @@ end:    .asciiz "END\n"
 space:  .asciiz " "
 enter:  .asciiz "\n"
 
-heap:   .space  1000
+heap:
+    .align 2
+    .space  1000
 heapsz: .word   250
 
 # -----------------------------------------------------
@@ -39,7 +41,6 @@ main:
 
     # $s2 = size of heap (static)
     # $s3 = store pointer
-    addi $s0, $s0, 3
     li  $s2, 0
     move $s3, $s0
 
